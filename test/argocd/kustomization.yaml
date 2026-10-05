@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.3/manifests/core-install.yaml
+  - git-server.yaml
+components:
+  - ../../deploy
+images:
+  - name: ghcr.io/xorps/argocd-cmp-cdk8s-deno
+    newName: cmp
+    newTag: test

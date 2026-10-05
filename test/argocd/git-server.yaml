@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+# serves a snapshot of the working tree, so argo has something to clone
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: git
+spec:
+  selector:
+    matchLabels:
+      app: git
+  template:
+    metadata:
+      labels:
+        app: git
+    spec:
+      containers:
+        - name: git
+          image: e2e-git:test
+          ports:
+            - containerPort: 9418
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: git
+spec:
+  selector:
+    app: git
+  ports:
+    - port: 9418

@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+# core-install has no api server, which is what normally creates this
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+spec:
+  sourceRepos: ["*"]
+  destinations:
+    - server: "*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: cdk8s-deno
+          image: ghcr.io/xorps/argocd-cmp-cdk8s-deno:0.1.0
+          command: [/var/run/argocd/argocd-cmp-server]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: var-files
+              mountPath: /var/run/argocd
+            - name: plugins
+              mountPath: /home/argocd/cmp-server/plugins
+            - name: cdk8s-deno-tmp
+              mountPath: /tmp
+            # the plugin never talks to the api server, so hide the token
+            - name: cdk8s-deno-no-token
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+      volumes:
+        - name: cdk8s-deno-tmp
+          emptyDir: {}
+        - name: cdk8s-deno-no-token
+          emptyDir: {}

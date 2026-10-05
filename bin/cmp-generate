@@ -1,0 +1,71 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+set -eu
+
+for k in $(env | awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ { print $1 }'); do
+  case "$k" in
+    PATH | HOME | CMP_HOME | DENO_* | ARGOCD_APP_* | ARGOCD_ENV_* | KUBE_*) ;;
+    *) unset "$k" ;;
+  esac
+done
+export NO_COLOR=1
+
+main="${ARGOCD_ENV_CDK8S_MAIN:-main.ts}"
+app="$(pwd -P)"
+
+# argo hands us the whole repo with cwd set to the app path inside it
+src="${ARGOCD_APP_SOURCE_PATH:-.}"
+src="${src#./}"
+src="${src%/}"
+case "$src" in
+  "" | .) root="$app" ;;
+  *)
+    case "$app" in
+      */"$src") root="${app%/"$src"}" ;;
+      *) root="$app" ;;
+    esac
+    ;;
+esac
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+out="$work/out"
+mkdir "$out"
+
+# deno info has no --cached-only, so give it nowhere to fetch from
+HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 deno info --json \
+  --config="$CMP_HOME/deno.json" \
+  --lock="$CMP_HOME/deno.lock" \
+  --frozen \
+  --no-remote \
+  "$main" >"$work/graph.json"
+
+deno run \
+  --no-config \
+  --no-lock \
+  --cached-only \
+  --no-remote \
+  --no-prompt \
+  --allow-read="$root" \
+  "$CMP_HOME/preflight.ts" "$root" "$app" <"$work/graph.json"
+
+# stdout belongs to argo, so anything the app prints goes to stderr
+CDK8S_OUTDIR="$out" deno run \
+  --config="$CMP_HOME/deno.json" \
+  --lock="$CMP_HOME/deno.lock" \
+  --frozen \
+  --cached-only \
+  --no-remote \
+  --no-prompt \
+  --allow-read="$app,$out" \
+  --allow-write="$out" \
+  --allow-env \
+  --v8-flags=--max-old-space-size=512 \
+  "$main" >&2
+
+find "$out" -type f \( -name '*.yaml' -o -name '*.yml' \) | sort | while read -r f; do
+  echo '---'
+  cat "$f"
+done
