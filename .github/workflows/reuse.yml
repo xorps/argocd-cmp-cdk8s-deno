@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+name: reuse
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6.0.0
+      - name: only Apache-2.0 OR MIT
+        run: |
+          bad="$(git grep -nIE 'SPDX-License-Identifie[r]' -- ':!LICENSES' \
+            | grep -vE 'SPDX-License-Identifie[r](: | = ")Apache-2\.0 OR MIT"?$' || true)"
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            exit 1
+          fi

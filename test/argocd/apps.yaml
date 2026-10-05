@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: basic
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git://git.argocd.svc.cluster.local/repo.git
+    targetRevision: HEAD
+    path: examples/basic
+    plugin:
+      name: cdk8s-deno
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: e2e-basic
+  syncPolicy:
+    automated: {}
+    syncOptions: [CreateNamespace=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shop
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git://git.argocd.svc.cluster.local/repo.git
+    targetRevision: HEAD
+    path: examples/webapp
+    plugin:
+      name: cdk8s-deno
+      parameters:
+        - name: image
+          string: ghcr.io/acme/shop:1.4.2
+        - name: replicas
+          string: "3"
+        - name: host
+          string: shop.example.com
+        - name: args
+          array: [--log-format=json]
+        - name: env
+          map:
+            LOG_LEVEL: info
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: e2e-shop
+  syncPolicy:
+    automated: {}
+    syncOptions: [CreateNamespace=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monorepo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git://git.argocd.svc.cluster.local/repo.git
+    targetRevision: HEAD
+    path: test/monorepo/apps/web
+    plugin:
+      name: cdk8s-deno
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: e2e-monorepo
+  syncPolicy:
+    automated: {}
+    syncOptions: [CreateNamespace=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: escape
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git://git.argocd.svc.cluster.local/repo.git
+    targetRevision: HEAD
+    path: test/argocd/escape
+    plugin:
+      name: cdk8s-deno
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: e2e-escape
+  syncPolicy:
+    automated: {}
+    syncOptions: [CreateNamespace=true]

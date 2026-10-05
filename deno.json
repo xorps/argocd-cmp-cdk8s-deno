@@ -1,0 +1,8 @@
+{
+  "nodeModulesDir": "none",
+  "imports": {
+    "cdk8s": "npm:cdk8s@2.70.108",
+    "cdk8s-plus-34": "npm:cdk8s-plus-34@2.0.62",
+    "constructs": "npm:constructs@10.8.1"
+  }
+}

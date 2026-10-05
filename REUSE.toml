@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 The argocd-cmp-cdk8s-deno Authors
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+version = 1
+
+[[annotations]]
+path = ["deno.json", "deno.lock"]
+SPDX-FileCopyrightText = "2026 The argocd-cmp-cdk8s-deno Authors"
+SPDX-License-Identifier = "Apache-2.0 OR MIT"
